@@ -87,10 +87,7 @@ class Tabuleiro:
             for j, number in enumerate(linha):
                 if j % 3 == 0 and j > 0:
                     tabuleiro += "| "
-                if number == 0:
-                    tabuleiro += "  "
-                else:
-                    tabuleiro += str(number) + " "
+                tabuleiro += [str(number), " "][number == 0] + " "
             tabuleiro += "\n"
         
         return tabuleiro
