@@ -1,8 +1,7 @@
-from time import sleep
 from Errors import *
 
 class Tabuleiro:
-    def __init__(self, linhas):
+    def __init__(self, linhas: list):
         """
             Inicializador de um tabuleiro de sudoku. Seu único atributo é o conjunto de linhas
             preenchidas inicialmente.
@@ -12,23 +11,36 @@ class Tabuleiro:
         self.linhas = linhas
         self.possibilidades = [[set([1,2,3,4,5,6,7,8,9]) for x in range(9)] for x in range(9)]
 
-    def ChecarConjunto(self, nomeConjunto, numConjunto):
-        """
-            Checa os números restantes na conjunto indicada por nomeConjunto e numConjunto
-            e retorna um conjunto com esses números
+        for i in range(9):
+            for j in range(9):
+                if self.linhas[i][j] == 0:
+                    #Listar todas as possibilidades para cada espaço vazio
+                    numQuadrado = (i // 3) * 3 + j // 3
+                    self.possibilidades[i][j].difference_update(self.GetCojunto("linha", i))
+                    self.possibilidades[i][j].difference_update(self.GetCojunto("coluna", j))
+                    self.possibilidades[i][j].difference_update(self.GetCojunto("quadrado", numQuadrado))
 
-            (str, int) -> set
+    def UpdatePossibilidades(self, nomeConjunto: str, numConjunto: int, numNovo: int):
         """
-        conjunto = self.GetCojunto(nomeConjunto, numConjunto)
-        possibilidadesConjunto = set()
+            Atualiza as possibilidades no conjunto indicado por nomeConjunto e numConjunto,
+            retirando os valores iguais a numNovo
 
-        for x in [1,2,3,4,5,6,7,8,9]:
-            if x not in conjunto:
-                possibilidadesConjunto.add(x)
+            (str, int, int) -> None
+        """
+        numNovoSet = {numNovo}
+        for i in range(9):
+            if nomeConjunto == "linha":
+                self.possibilidades[numConjunto][i].difference_update(numNovoSet)
+            
+            elif nomeConjunto == "coluna":
+                self.possibilidades[i][numConjunto].difference_update(numNovoSet)
+            
+            elif nomeConjunto == "quadrado":
+                self.possibilidades[(numConjunto // 3) * 3 + i // 3][(numConjunto % 3) * 3 + i % 3].difference_update(numNovoSet)
+
         
-        return possibilidadesConjunto
         
-    def GetCojunto(self, nomeConjunto, numConjunto):
+    def GetCojunto(self, nomeConjunto: str, numConjunto: int):
         """
             Retorna o conjunto de tipo especificado e de número especificado
             Tipos aceitos:
@@ -55,7 +67,7 @@ class Tabuleiro:
             return quadrado
         else:
             raise ConjuntoInexistenteError
-    
+
     def Resolver(self):
         """
             Um algoritmo para resolver o tabuleiro de sudoku armazenado
@@ -66,17 +78,16 @@ class Tabuleiro:
             for i in range(9):
                 for j in range(9):
                     if self.linhas[i][j] == 0:
-                        #Listar todas as possibilidades
-                        quadPossibilides = self.possibilidades[i][j]
-                        numQuadrado = (i // 3) * 3 + j // 3
-                        quadPossibilides.difference_update(self.GetCojunto("linha", i))
-                        quadPossibilides.difference_update(self.GetCojunto("coluna", j))
-                        quadPossibilides.difference_update(self.GetCojunto("quadrado", numQuadrado))
+                        quadPossibilidades = self.possibilidades[i][j]
+                        
                         #Checar para ver se existe possibilidade única
-                        if len(quadPossibilides) != 1:
-                            self.possibilidades[i][j] = quadPossibilides
-                        else:
-                            self.linhas[i][j] = quadPossibilides.pop()
+                        if len(quadPossibilidades) == 1:
+                            numNovo = quadPossibilidades.pop()
+                            self.linhas[i][j] = numNovo
+                            #Atualizar a linha, coluna e quadrado desse espaço
+                            self.UpdatePossibilidades("linha", i, numNovo)
+                            self.UpdatePossibilidades("coluna", j, numNovo)
+                            self.UpdatePossibilidades("quadrado", (i // 3) * 3 + j // 3, numNovo)
 
     def __str__(self):
         tabuleiro = ""
